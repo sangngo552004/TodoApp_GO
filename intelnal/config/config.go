@@ -22,6 +22,7 @@ func ConnectDB() (*gorm.DB, error) {
 		GetEnv("DB_HOST", "localhost") + ":" +
 		GetEnv("DB_PORT", "3306") + ")/" +
 		GetEnv("DB_NAME", "todo_db") + "?charset=utf8mb4&parseTime=True&loc=Local"
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
