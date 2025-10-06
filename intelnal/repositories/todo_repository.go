@@ -8,6 +8,7 @@ import (
 
 type TodoRepository interface {
 	GetAll() ([]models.Todo, error)
+	CreateTodo(todo *models.Todo) error
 }
 
 type TodoRepositoryImpl struct {
@@ -22,4 +23,8 @@ func (r *TodoRepositoryImpl) GetAll() ([]models.Todo, error) {
 	var todos []models.Todo
 	err := r.db.Find(&todos).Error
 	return todos, err
+}
+
+func (r *TodoRepositoryImpl) CreateTodo(todo *models.Todo) error {
+	return r.db.Create(todo).Error
 }

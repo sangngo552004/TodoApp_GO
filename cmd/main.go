@@ -34,6 +34,7 @@ func main() {
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/todos", todoHandler.GetTodos)
+		v1.POST("/todos", todoHandler.CreateTodo)
 
 	}
 

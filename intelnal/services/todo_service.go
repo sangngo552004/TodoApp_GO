@@ -7,6 +7,7 @@ import (
 
 type TodoService interface {
 	GetTodos() ([]models.Todo, error)
+	CreateTodo(todo *models.Todo) error
 }
 
 type TodoServiceImpl struct {
@@ -19,4 +20,8 @@ func NewTodoService(todoRepository repositories.TodoRepository) TodoService {
 
 func (s *TodoServiceImpl) GetTodos() ([]models.Todo, error) {
 	return s.todoRepository.GetAll()
+}
+
+func (s *TodoServiceImpl) CreateTodo(todo *models.Todo) error {
+	return s.todoRepository.CreateTodo(todo)
 }

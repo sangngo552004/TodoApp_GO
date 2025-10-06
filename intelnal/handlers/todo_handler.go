@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"awesomeProject1/intelnal/models"
 	"awesomeProject1/intelnal/services"
 	"log"
 	"net/http"
@@ -24,4 +25,18 @@ func (h *TodoHandler) GetTodos(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, todos)
+}
+
+func (h *TodoHandler) CreateTodo(c *gin.Context) {
+	var todo models.Todo
+	if err := c.ShouldBindJSON(&todo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.CreateTodo(&todo); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusAccepted, todo)
 }
