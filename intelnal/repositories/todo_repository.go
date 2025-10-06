@@ -11,6 +11,7 @@ type TodoRepository interface {
 	CreateTodo(todo *models.Todo) error
 	UpdateTodo(todo *models.Todo) error
 	FindByID(id uint) (*models.Todo, error)
+	DeleteTodo(id uint) error
 }
 
 type TodoRepositoryImpl struct {
@@ -39,4 +40,8 @@ func (r *TodoRepositoryImpl) FindByID(id uint) (*models.Todo, error) {
 	var todo models.Todo
 	err := r.db.First(&todo, id).Error
 	return &todo, err
+}
+
+func (r *TodoRepositoryImpl) DeleteTodo(id uint) error {
+	return r.db.Delete(&models.Todo{}, id).Error
 }

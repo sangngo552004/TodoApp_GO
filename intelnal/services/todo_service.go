@@ -9,6 +9,7 @@ type TodoService interface {
 	GetTodos() ([]models.Todo, error)
 	CreateTodo(todo *models.Todo) error
 	UpdateTodo(id uint, completed bool) error
+	DeleteTodo(id uint) error
 }
 
 type TodoServiceImpl struct {
@@ -34,4 +35,9 @@ func (s *TodoServiceImpl) UpdateTodo(id uint, completed bool) error {
 	}
 	todo.Completed = completed
 	return s.todoRepository.UpdateTodo(todo)
+}
+
+func (s *TodoServiceImpl) DeleteTodo(id uint) error {
+	return s.todoRepository.DeleteTodo(id)
+
 }

@@ -61,5 +61,19 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 	if err := h.service.UpdateTodo(uint(id), req.Completed); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-	c.JSON(http.StatusAccepted, gin.H{})
+	c.JSON(http.StatusAccepted, gin.H{"message": "Todo updated"})
+}
+
+func (h *TodoHandler) DeleteTodo(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.service.DeleteTodo(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusAccepted, gin.H{"message": "Todo deleted"})
 }
