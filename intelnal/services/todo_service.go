@@ -8,6 +8,7 @@ import (
 type TodoService interface {
 	GetTodos() ([]models.Todo, error)
 	CreateTodo(todo *models.Todo) error
+	UpdateTodo(id uint, completed bool) error
 }
 
 type TodoServiceImpl struct {
@@ -24,4 +25,13 @@ func (s *TodoServiceImpl) GetTodos() ([]models.Todo, error) {
 
 func (s *TodoServiceImpl) CreateTodo(todo *models.Todo) error {
 	return s.todoRepository.CreateTodo(todo)
+}
+
+func (s *TodoServiceImpl) UpdateTodo(id uint, completed bool) error {
+	todo, err := s.todoRepository.FindByID(id)
+	if err != nil {
+		return err
+	}
+	todo.Completed = completed
+	return s.todoRepository.UpdateTodo(todo)
 }

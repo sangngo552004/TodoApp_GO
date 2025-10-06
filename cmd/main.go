@@ -35,7 +35,7 @@ func main() {
 	{
 		v1.GET("/todos", todoHandler.GetTodos)
 		v1.POST("/todos", todoHandler.CreateTodo)
-
+		v1.PUT("/todos/:id", todoHandler.UpdateTodo)
 	}
 
 	port := config.GetEnv("SERVER_PORT", "8080")

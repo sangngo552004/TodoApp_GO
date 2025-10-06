@@ -9,6 +9,8 @@ import (
 type TodoRepository interface {
 	GetAll() ([]models.Todo, error)
 	CreateTodo(todo *models.Todo) error
+	UpdateTodo(todo *models.Todo) error
+	FindByID(id uint) (*models.Todo, error)
 }
 
 type TodoRepositoryImpl struct {
@@ -27,4 +29,14 @@ func (r *TodoRepositoryImpl) GetAll() ([]models.Todo, error) {
 
 func (r *TodoRepositoryImpl) CreateTodo(todo *models.Todo) error {
 	return r.db.Create(todo).Error
+}
+
+func (r *TodoRepositoryImpl) UpdateTodo(todo *models.Todo) error {
+	return r.db.Save(todo).Error
+}
+
+func (r *TodoRepositoryImpl) FindByID(id uint) (*models.Todo, error) {
+	var todo models.Todo
+	err := r.db.First(&todo, id).Error
+	return &todo, err
 }
