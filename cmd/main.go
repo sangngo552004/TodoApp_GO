@@ -30,6 +30,7 @@ func main() {
 	todoHandler := handlers.NewTodoHandler(todoService)
 
 	r := gin.Default()
+	r.POST("/login", userHa)
 	// Đăng ký routes
 	v1 := r.Group("/api/v1")
 	{

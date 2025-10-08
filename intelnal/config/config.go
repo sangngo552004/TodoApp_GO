@@ -3,6 +3,7 @@ package config
 import (
 	"awesomeProject1/intelnal/models"
 	"os"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -15,6 +16,8 @@ func GetEnv(key, defaulValue string) string {
 	}
 	return value
 }
+
+const TokenExpireDuration = time.Minute * 6
 
 func ConnectDB() (*gorm.DB, error) {
 	dsn := GetEnv("DB_USER", "root") + ":" +
