@@ -4,6 +4,7 @@ import (
 	"awesomeProject1/intelnal/config"
 	"awesomeProject1/intelnal/handlers"
 	"awesomeProject1/intelnal/repositories"
+	"awesomeProject1/intelnal/routes"
 	"awesomeProject1/intelnal/services"
 	"fmt"
 	"log"
@@ -24,21 +25,17 @@ func main() {
 	}
 	fmt.Println("Connected to MySQL database")
 
+	r := gin.Default()
 	// Khởi tạo repository, service, handler
 	todoRepo := repositories.NewTodoRepository(db)
 	todoService := services.NewTodoService(todoRepo)
 	todoHandler := handlers.NewTodoHandler(todoService)
+	routes.InitTodoRoutes(r, todoHandler)
 
-	r := gin.Default()
-	r.POST("/login", userHa)
-	// Đăng ký routes
-	v1 := r.Group("/api/v1")
-	{
-		v1.GET("/todos", todoHandler.GetTodos)
-		v1.POST("/todos", todoHandler.CreateTodo)
-		v1.PUT("/todos/:id", todoHandler.UpdateTodo)
-		v1.DELETE("/todos/:id", todoHandler.DeleteTodo)
-	}
+	userRepo := repositories.NewUserRepository(db)
+	authService := services.NewAuthService(userRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+	routes.InitAuthRoutes(r, authHandler)
 
 	port := config.GetEnv("SERVER_PORT", "8080")
 	err = r.Run(":" + port)

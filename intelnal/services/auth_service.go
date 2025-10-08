@@ -12,20 +12,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService interface {
+type AuthService interface {
 	Register(req *DTOrequest.RegisterRequest) error
 	Login(req *DTOrequest.LoginRequest) (string, error)
 }
 
-type UserServiceImpl struct {
+type AuthServiceImpl struct {
 	userRepository repositories.UserRepository
 }
 
-func NewUserService(userRepository repositories.UserRepository) UserService {
-	return &UserServiceImpl{userRepository: userRepository}
+func NewAuthService(userRepository repositories.UserRepository) AuthService {
+	return &AuthServiceImpl{userRepository: userRepository}
 }
 
-func (s *UserServiceImpl) Register(req *DTOrequest.RegisterRequest) error {
+func (s *AuthServiceImpl) Register(req *DTOrequest.RegisterRequest) error {
 	_, err := s.userRepository.FindByEmail(req.Email)
 	if err == nil {
 		return errors.New("email already exists")
@@ -46,7 +46,7 @@ func (s *UserServiceImpl) Register(req *DTOrequest.RegisterRequest) error {
 	return nil
 }
 
-func (s *UserServiceImpl) Login(req *DTOrequest.LoginRequest) (string, error) {
+func (s *AuthServiceImpl) Login(req *DTOrequest.LoginRequest) (string, error) {
 	user, err := s.userRepository.FindByEmail(req.Email)
 	if err != nil {
 		return "", errors.New("Email not found")

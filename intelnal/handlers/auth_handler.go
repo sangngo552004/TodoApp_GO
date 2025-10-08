@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserHandler struct {
+type AuthHandler struct {
 	service services.UserService
 }
 
-func NewUserHandler(service services.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewAuthHandler(service services.UserService) *AuthHandler {
+	return &AuthHandler{service: service}
 }
 
-func (s *UserHandler) Login(c *gin.Context) {
+func (s *AuthHandler) Login(c *gin.Context) {
 	var req DTOrequest.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -31,7 +31,7 @@ func (s *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-func (s *UserHandler) Register(c *gin.Context) {
+func (s *AuthHandler) Register(c *gin.Context) {
 	var req DTOrequest.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
