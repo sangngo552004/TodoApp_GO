@@ -12,6 +12,7 @@ type TodoRepository interface {
 	UpdateTodo(todo *models.Todo) error
 	FindByID(id uint) (*models.Todo, error)
 	DeleteTodo(id uint) error
+	FindByUserId(id uint) ([]models.Todo, error)
 }
 
 type TodoRepositoryImpl struct {
@@ -44,4 +45,10 @@ func (r *TodoRepositoryImpl) FindByID(id uint) (*models.Todo, error) {
 
 func (r *TodoRepositoryImpl) DeleteTodo(id uint) error {
 	return r.db.Delete(&models.Todo{}, id).Error
+}
+
+func (r *TodoRepositoryImpl) FindByUserId(userId uint) ([]models.Todo, error) {
+	var todos []models.Todo
+	err := r.db.Where("user_id = ?", userId).Find(&todos).Error
+	return todos, err
 }

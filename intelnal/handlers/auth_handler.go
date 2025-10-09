@@ -9,10 +9,10 @@ import (
 )
 
 type AuthHandler struct {
-	service services.UserService
+	service services.AuthService
 }
 
-func NewAuthHandler(service services.UserService) *AuthHandler {
+func NewAuthHandler(service services.AuthService) *AuthHandler {
 	return &AuthHandler{service: service}
 }
 
@@ -35,6 +35,7 @@ func (s *AuthHandler) Register(c *gin.Context) {
 	var req DTOrequest.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	if err := s.service.Register(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
