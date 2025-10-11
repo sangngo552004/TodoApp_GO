@@ -1,4 +1,4 @@
-package DTOrequest
+package dto_requests
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"awesomeProject1/intelnal/DTOs/DTOrequest"
+	"awesomeProject1/intelnal/dtos/dto_requests"
 	"awesomeProject1/intelnal/services"
 	"net/http"
 
@@ -17,22 +17,23 @@ func NewAuthHandler(service services.AuthService) *AuthHandler {
 }
 
 func (s *AuthHandler) Login(c *gin.Context) {
-	var req DTOrequest.LoginRequest
+	var req dto_requests.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	token, err := s.service.Login(&req)
+	accessToken, refreshToken, err := s.service.Login(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, gin.H{"accessToken": accessToken,
+		"refreshToken": refreshToken})
 }
 
 func (s *AuthHandler) Register(c *gin.Context) {
-	var req DTOrequest.RegisterRequest
+	var req dto_requests.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -42,4 +43,18 @@ func (s *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "User created"})
+}
+
+func (s *AuthHandler) Refresh(c *gin.Context) {
+	var req dto_requests.RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	accessToken, err := s.service.RefreshToken(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"accessToken": accessToken})
 }

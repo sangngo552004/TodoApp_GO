@@ -1,20 +1,19 @@
 package services
 
 import (
-	"awesomeProject1/intelnal/DTOs/DTOrequest"
-	"awesomeProject1/intelnal/config"
+	"awesomeProject1/intelnal/dtos/dto_requests"
 	"awesomeProject1/intelnal/models"
 	"awesomeProject1/intelnal/repositories"
+	"awesomeProject1/intelnal/utils"
 	"errors"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
-	Register(req *DTOrequest.RegisterRequest) error
-	Login(req *DTOrequest.LoginRequest) (string, error)
+	Register(req *dto_requests.RegisterRequest) error
+	Login(req *dto_requests.LoginRequest) (string, string, error)
+	RefreshToken(req *dto_requests.RefreshRequest) (string, error)
 }
 
 type AuthServiceImpl struct {
@@ -25,7 +24,7 @@ func NewAuthService(userRepository repositories.UserRepository) AuthService {
 	return &AuthServiceImpl{userRepository: userRepository}
 }
 
-func (s *AuthServiceImpl) Register(req *DTOrequest.RegisterRequest) error {
+func (s *AuthServiceImpl) Register(req *dto_requests.RegisterRequest) error {
 	_, err := s.userRepository.FindByEmail(req.Email)
 	if err == nil {
 		return errors.New("email already exists")
@@ -46,23 +45,36 @@ func (s *AuthServiceImpl) Register(req *DTOrequest.RegisterRequest) error {
 	return nil
 }
 
-func (s *AuthServiceImpl) Login(req *DTOrequest.LoginRequest) (string, error) {
+func (s *AuthServiceImpl) Login(req *dto_requests.LoginRequest) (string, string, error) {
 	user, err := s.userRepository.FindByEmail(req.Email)
 	if err != nil {
-		return "", errors.New("Email not found")
+		return "", "", errors.New("Email not found")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return "", errors.New("Invalid password")
+		return "", "", errors.New("Invalid password")
+	}
+	access, _ := utils.GenerateAccessToken(user.ID)
+	refresh, _ := utils.GenerateRefreshToken(user.ID)
+
+	return access, refresh, nil
+}
+
+func (s *AuthServiceImpl) RefreshToken(req *dto_requests.RefreshRequest) (string, error) {
+	claims, err := utils.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		return "", errors.New("invalid or expired refresh token")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(config.TokenExpireDuration).Unix(),
-	})
-	tokenString, err := token.SignedString([]byte(config.GetEnv("JWT_SECRET", "secret")))
-	if err != nil {
-		return "", errors.New("Error signing token")
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return "", errors.New("invalid token payload")
 	}
-	return tokenString, nil
+
+	newAccess, err := utils.GenerateAccessToken(uint(userID))
+	if err != nil {
+		return "", errors.New("failed to generate new token")
+	}
+
+	return newAccess, nil
 }

@@ -9,10 +9,11 @@ import (
 func InitAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 	v1 := r.Group("/api/v1")
 	{
-		todos := v1.Group("/auth")
+		auths := v1.Group("/auth")
 		{
-			todos.POST("login", authHandler.Login)
-			todos.POST("register", authHandler.Register)
+			auths.POST("login", authHandler.Login)
+			auths.POST("register", authHandler.Register)
+			auths.POST("refresh", authHandler.Refresh)
 		}
 	}
 }

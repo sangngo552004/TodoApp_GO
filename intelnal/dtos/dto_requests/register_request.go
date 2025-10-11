@@ -1,4 +1,4 @@
-package DTOrequest
+package dto_requests
 
 type RegisterRequest struct {
 	Name     string `json:"name" binding:"required"`
