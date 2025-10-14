@@ -2,9 +2,12 @@ package utils
 
 import (
 	"awesomeProject1/intelnal/config"
+	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 )
 
 var accessSecret = []byte(config.GetEnv("JWT_SECRET", "secret"))
@@ -25,7 +28,7 @@ func GenerateAccessToken(userId uint) (string, error) {
 	return tokenString, nil
 }
 
-func GenerateRefreshToken(userId uint) (string, error) {
+func GenerateRefreshToken(userId uint, redisClient *redis.Client) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
 		"exp":     refreshExpireDuration,
@@ -34,10 +37,15 @@ func GenerateRefreshToken(userId uint) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	redisClient.Set(context.Background(), tokenString, userId, refreshExpireDuration)
 	return tokenString, nil
 }
-func ValidateRefreshToken(tokenString string) (jwt.MapClaims, error) {
-	return ParseToken(tokenString, accessSecret)
+func ValidateRefreshToken(tokenString string, redisClient *redis.Client) (jwt.MapClaims, error) {
+	_, err := redisClient.Get(context.Background(), tokenString).Uint64()
+	if err != nil {
+		return nil, err
+	}
+	return ParseToken(tokenString, refreshSecret)
 }
 func ValidateAccessToken(tokenString string) (jwt.MapClaims, error) {
 	return ParseToken(tokenString, refreshSecret)

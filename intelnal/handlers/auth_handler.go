@@ -58,3 +58,17 @@ func (s *AuthHandler) Refresh(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"accessToken": accessToken})
 }
+
+func (s *AuthHandler) Logout(c *gin.Context) {
+	var req dto_requests.RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := s.service.Logout(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Logout success"})
+}

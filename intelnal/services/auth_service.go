@@ -5,8 +5,10 @@ import (
 	"awesomeProject1/intelnal/models"
 	"awesomeProject1/intelnal/repositories"
 	"awesomeProject1/intelnal/utils"
+	"context"
 	"errors"
 
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,14 +16,19 @@ type AuthService interface {
 	Register(req *dto_requests.RegisterRequest) error
 	Login(req *dto_requests.LoginRequest) (string, string, error)
 	RefreshToken(req *dto_requests.RefreshRequest) (string, error)
+	Logout(req *dto_requests.RefreshRequest) error
 }
 
 type AuthServiceImpl struct {
 	userRepository repositories.UserRepository
+	redisClient    *redis.Client
 }
 
-func NewAuthService(userRepository repositories.UserRepository) AuthService {
-	return &AuthServiceImpl{userRepository: userRepository}
+func NewAuthService(userRepository repositories.UserRepository, redisClient *redis.Client) AuthService {
+	return &AuthServiceImpl{
+		userRepository: userRepository,
+		redisClient:    redisClient,
+	}
 }
 
 func (s *AuthServiceImpl) Register(req *dto_requests.RegisterRequest) error {
@@ -55,13 +62,13 @@ func (s *AuthServiceImpl) Login(req *dto_requests.LoginRequest) (string, string,
 		return "", "", errors.New("Invalid password")
 	}
 	access, _ := utils.GenerateAccessToken(user.ID)
-	refresh, _ := utils.GenerateRefreshToken(user.ID)
+	refresh, _ := utils.GenerateRefreshToken(user.ID, s.redisClient)
 
 	return access, refresh, nil
 }
 
 func (s *AuthServiceImpl) RefreshToken(req *dto_requests.RefreshRequest) (string, error) {
-	claims, err := utils.ValidateRefreshToken(req.RefreshToken)
+	claims, err := utils.ValidateRefreshToken(req.RefreshToken, s.redisClient)
 	if err != nil {
 		return "", errors.New("invalid or expired refresh token")
 	}
@@ -77,4 +84,12 @@ func (s *AuthServiceImpl) RefreshToken(req *dto_requests.RefreshRequest) (string
 	}
 
 	return newAccess, nil
+}
+
+func (s *AuthServiceImpl) Logout(req *dto_requests.RefreshRequest) error {
+	ctx := context.Background()
+	if err := s.redisClient.Del(ctx, req.RefreshToken).Err(); err != nil {
+		return err
+	}
+	return nil
 }

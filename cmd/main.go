@@ -25,6 +25,12 @@ func main() {
 	}
 	fmt.Println("Connected to MySQL database")
 
+	redisClient, err := config.ConnectRedis()
+	if err != nil {
+		log.Fatalf("Failed to connect to redis: %v", err)
+	}
+	fmt.Println("Connected to Redis")
+
 	r := gin.Default()
 	// Khởi tạo repository, service, handler
 	todoRepo := repositories.NewTodoRepository(db)
@@ -33,7 +39,7 @@ func main() {
 	routes.InitTodoRoutes(r, todoHandler)
 
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, redisClient)
 	authHandler := handlers.NewAuthHandler(authService)
 	routes.InitAuthRoutes(r, authHandler)
 

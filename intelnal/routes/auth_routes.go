@@ -14,6 +14,7 @@ func InitAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler) {
 			auths.POST("login", authHandler.Login)
 			auths.POST("register", authHandler.Register)
 			auths.POST("refresh", authHandler.Refresh)
+			auths.POST("logout", authHandler.Logout)
 		}
 	}
 }

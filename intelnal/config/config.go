@@ -2,9 +2,11 @@ package config
 
 import (
 	"awesomeProject1/intelnal/models"
+	"context"
 	"os"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -37,4 +39,22 @@ func ConnectDB() (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func ConnectRedis() (*redis.Client, error) {
+	addr := GetEnv("REDIS_ADDR", "localhost:6379")
+	password := GetEnv("REDIS_PASSWORD", "")
+	db := 0
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: password,
+		DB:       db,
+	})
+
+	_, err := client.Ping(context.Background()).Result()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
