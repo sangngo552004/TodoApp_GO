@@ -3,6 +3,7 @@ package main
 import (
 	"awesomeProject1/intelnal/config"
 	"awesomeProject1/intelnal/handlers"
+	"awesomeProject1/intelnal/middlewares"
 	"awesomeProject1/intelnal/repositories"
 	"awesomeProject1/intelnal/routes"
 	"awesomeProject1/intelnal/services"
@@ -32,6 +33,8 @@ func main() {
 	fmt.Println("Connected to Redis")
 
 	r := gin.Default()
+	//Dùng middleware global handler error
+	r.Use(middlewares.ErrorHandler())
 	// Khởi tạo repository, service, handler
 	todoRepo := repositories.NewTodoRepository(db)
 	todoService := services.NewTodoService(todoRepo)

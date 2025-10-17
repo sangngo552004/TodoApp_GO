@@ -1,20 +1,20 @@
 package services
 
 import (
+	"awesomeProject1/intelnal/apperror"
 	"awesomeProject1/intelnal/dtos/dto_requests"
 	"awesomeProject1/intelnal/models"
 	"awesomeProject1/intelnal/repositories"
 	"awesomeProject1/intelnal/utils"
 	"context"
-	"errors"
 
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
-	Register(req *dto_requests.RegisterRequest) error
-	Login(req *dto_requests.LoginRequest) (string, string, error)
+	Register(req *dto_requests.RegisterRequest) (*models.User, error)
+	Login(req *dto_requests.LoginRequest) (string, string, *models.User, error)
 	RefreshToken(req *dto_requests.RefreshRequest) (string, error)
 	Logout(req *dto_requests.RefreshRequest) error
 }
@@ -31,15 +31,15 @@ func NewAuthService(userRepository repositories.UserRepository, redisClient *red
 	}
 }
 
-func (s *AuthServiceImpl) Register(req *dto_requests.RegisterRequest) error {
+func (s *AuthServiceImpl) Register(req *dto_requests.RegisterRequest) (*models.User, error) {
 	_, err := s.userRepository.FindByEmail(req.Email)
 	if err == nil {
-		return errors.New("email already exists")
+		return nil, apperror.Conflict("Email already exists", err)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("error hashing password")
+		return nil, apperror.InternalServerError("Error hashing password", err)
 	}
 	user := models.User{
 		Name:     req.Name,
@@ -47,40 +47,40 @@ func (s *AuthServiceImpl) Register(req *dto_requests.RegisterRequest) error {
 		Password: string(hashedPassword),
 	}
 	if err := s.userRepository.Create(&user); err != nil {
-		return errors.New("error creating user")
+		return nil, apperror.InternalServerError("Error creating user", err)
 	}
-	return nil
+	return &user, nil
 }
 
-func (s *AuthServiceImpl) Login(req *dto_requests.LoginRequest) (string, string, error) {
+func (s *AuthServiceImpl) Login(req *dto_requests.LoginRequest) (string, string, *models.User, error) {
 	user, err := s.userRepository.FindByEmail(req.Email)
 	if err != nil {
-		return "", "", errors.New("Email not found")
+		return "", "", nil, apperror.NotFound("Email not found", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return "", "", errors.New("Invalid password")
+		return "", "", nil, apperror.Unauthorized("Invalid credentials", err)
 	}
 	access, _ := utils.GenerateAccessToken(user.ID)
 	refresh, _ := utils.GenerateRefreshToken(user.ID, s.redisClient)
 
-	return access, refresh, nil
+	return access, refresh, user, nil
 }
 
 func (s *AuthServiceImpl) RefreshToken(req *dto_requests.RefreshRequest) (string, error) {
 	claims, err := utils.ValidateRefreshToken(req.RefreshToken, s.redisClient)
 	if err != nil {
-		return "", errors.New("invalid or expired refresh token")
+		return "", apperror.Unauthorized("Invalid refresh token", err)
 	}
 
 	userID, ok := claims["user_id"].(float64)
 	if !ok {
-		return "", errors.New("invalid token payload")
+		return "", apperror.InternalServerError("Invalid token payload", err)
 	}
 
 	newAccess, err := utils.GenerateAccessToken(uint(userID))
 	if err != nil {
-		return "", errors.New("failed to generate new token")
+		return "", apperror.InternalServerError("Error generating new access token", err)
 	}
 
 	return newAccess, nil
@@ -89,7 +89,7 @@ func (s *AuthServiceImpl) RefreshToken(req *dto_requests.RefreshRequest) (string
 func (s *AuthServiceImpl) Logout(req *dto_requests.RefreshRequest) error {
 	ctx := context.Background()
 	if err := s.redisClient.Del(ctx, req.RefreshToken).Err(); err != nil {
-		return err
+		return apperror.InternalServerError("Error deleting refresh token", err)
 	}
 	return nil
 }
