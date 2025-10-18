@@ -5,6 +5,7 @@ import (
 	"awesomeProject1/intelnal/dtos/dto_responses"
 
 	"errors"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +25,7 @@ func ErrorHandler() gin.HandlerFunc {
 				}
 				dto_responses.ErrorResponse(c, appErr.Code, appErr.Error(), apiError)
 				c.Abort()
+				return
 			}
 			apiError := &dto_responses.APIError{
 				Code:    500,

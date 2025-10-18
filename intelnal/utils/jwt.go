@@ -19,7 +19,7 @@ var refreshExpireDuration = time.Hour * 24
 func GenerateAccessToken(userId uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
-		"exp":     accessExpireDuration,
+		"exp":     time.Now().Add(accessExpireDuration).Unix(),
 	})
 	tokenString, err := token.SignedString(accessSecret)
 	if err != nil {
@@ -31,13 +31,16 @@ func GenerateAccessToken(userId uint) (string, error) {
 func GenerateRefreshToken(userId uint, redisClient *redis.Client) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
-		"exp":     refreshExpireDuration,
+		"exp":     time.Now().Add(refreshExpireDuration).Unix(),
 	})
 	tokenString, err := token.SignedString(refreshSecret)
 	if err != nil {
 		return "", err
 	}
-	redisClient.Set(context.Background(), tokenString, userId, refreshExpireDuration)
+	err = redisClient.Set(context.Background(), tokenString, userId, refreshExpireDuration).Err()
+	if err != nil {
+		return "", err
+	}
 	return tokenString, nil
 }
 func ValidateRefreshToken(tokenString string, redisClient *redis.Client) (jwt.MapClaims, error) {
@@ -48,7 +51,7 @@ func ValidateRefreshToken(tokenString string, redisClient *redis.Client) (jwt.Ma
 	return ParseToken(tokenString, refreshSecret)
 }
 func ValidateAccessToken(tokenString string) (jwt.MapClaims, error) {
-	return ParseToken(tokenString, refreshSecret)
+	return ParseToken(tokenString, accessSecret)
 }
 
 func ParseToken(tokenString string, secret []byte) (jwt.MapClaims, error) {
