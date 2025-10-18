@@ -75,6 +75,7 @@ func (s *AuthHandler) Refresh(c *gin.Context) {
 			Message: err.Error(),
 		}
 		dto_responses.ErrorResponse(c, http.StatusBadRequest, "Invalid request body", apiError)
+		return
 	}
 	accessToken, err := s.service.RefreshToken(&req)
 	if err != nil {
@@ -95,6 +96,7 @@ func (s *AuthHandler) Logout(c *gin.Context) {
 			Message: err.Error(),
 		}
 		dto_responses.ErrorResponse(c, http.StatusBadRequest, "Invalid request body", apiError)
+		return
 	}
 	err := s.service.Logout(&req)
 	if err != nil {
